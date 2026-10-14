@@ -84,8 +84,17 @@ function validateRegistry(registry) {
     if (rule.reviewedOn != null && !isIsoDate(rule.reviewedOn)) {
       errors.push(at + ".reviewedOn must be a real YYYY-MM-DD date or null.");
     }
+    if (rule.sourcePublishedOn != null && !isIsoDate(rule.sourcePublishedOn)) {
+      errors.push(at + ".sourcePublishedOn must be a real YYYY-MM-DD date or null.");
+    }
+    if (rule.sourceCheckedOn != null && !isIsoDate(rule.sourceCheckedOn)) {
+      errors.push(at + ".sourceCheckedOn must be a real YYYY-MM-DD date or null.");
+    }
     if (isIsoDate(rule.effectiveFrom) && isIsoDate(rule.effectiveTo) && rule.effectiveTo < rule.effectiveFrom) {
       errors.push(at + ".effectiveTo cannot be earlier than effectiveFrom.");
+    }
+    if (isIsoDate(rule.sourcePublishedOn) && isIsoDate(rule.sourceCheckedOn) && rule.sourceCheckedOn < rule.sourcePublishedOn) {
+      errors.push(at + ".sourceCheckedOn cannot be earlier than sourcePublishedOn.");
     }
     if (rule.sourceUrl != null) {
       try {
