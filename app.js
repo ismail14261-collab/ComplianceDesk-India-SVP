@@ -211,7 +211,7 @@
     const dialog=$("#"+id);
     if(id==="taskDialog") {
       renderEntityOptions();
-      const form=$("#taskForm");form.reset();form.elements.status.value="Open";form.elements.priority.value="Medium";form.elements.verification.value="Not verified";
+      const form=$("#taskForm");form.reset();delete form.dataset.editId;$(".modal-header h2",$("#taskDialog")).textContent="Add compliance task";form.elements.status.value="Open";form.elements.priority.value="Medium";form.elements.verification.value="Not verified";
     }
     if(id==="entityDialog") $("#entityForm").reset();
     dialog.showModal();
@@ -301,9 +301,9 @@
       if(!confirm("Remove this entity? Its tasks will remain but become unassigned to a known entity."))return;
       state.entities=state.entities.filter(e=>e.id!==id);state.tasks=state.tasks.map(t=>t.entity===id?{...t,entity:""}:t);refresh();if(activeView==="entities")renderEntities();showToast("Entity removed; related tasks retained.");return;
     }
-    if(event.target.id==="quickAdd"||event.target.id==="quickAddTop"||event.target.id==="shortcutTask"){openDialog("taskDialog");return;}
-    if(event.target.id==="shortcutEntity"){openDialog("entityDialog");return;}
-    if(event.target.id==="exportButton"){exportCsv();return;}
+    if(event.target.closest("#quickAdd, #quickAddTop, #shortcutTask")){openDialog("taskDialog");return;}
+    if(event.target.closest("#shortcutEntity")){openDialog("entityDialog");return;}
+    if(event.target.closest("#exportButton")){exportCsv();return;}
     if(event.target.id==="helpButton"){showToast("Use official legal sources and independently verify all statutory dates before relying on them.");return;}
     if(event.target.id==="mobileMenu")$("#sidebar").classList.toggle("open");
   });
@@ -315,7 +315,6 @@
   });
   $("#taskSearch").addEventListener("input",renderTasks);
   $("#statusFilter").addEventListener("change",renderTasks);
-  $("#exportButton").addEventListener("click",exportCsv);
   $("#todayLabel").textContent=new Intl.DateTimeFormat("en-IN",{weekday:"short",day:"numeric",month:"short",year:"numeric"}).format(today);
   $("#yearLabel").textContent=today.getFullYear();
   refresh();
