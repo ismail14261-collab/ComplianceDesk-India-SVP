@@ -25,6 +25,16 @@ No build tools are required for the current front-end MVP.
 
 The initial registry is `data/legal-rules.json`. It intentionally starts empty; no statutory deadlines are approved. Run `node scripts/validate-legal-rules.js` to validate it and `node --test scripts/validate-legal-rules.test.js` to run approval-gate tests. The validator checks rule IDs, status values, dates, HTTPS source URLs, and mandatory evidence for rules marked approved. It does not independently verify that a cited source is authoritative or that a legal interpretation is correct; qualified human review remains required.
 
+## GitHub Pages deployment
+
+The workflow validates every push to `main`. To publish the static site, an owner/admin must first enable Pages in repository settings because the connected automation cannot create the Pages site with its current permissions:
+
+1. Open **Settings → Pages** in this repository.
+2. Under **Build and deployment**, choose **GitHub Actions** as the source.
+3. Return to **Actions** and rerun the latest `Validate and deploy ComplianceDesk India` workflow, or push a new commit to `main`.
+
+A successful validation job does not mean deployment succeeded. Confirm that the deployment job completes and provides a Pages URL before sharing the site.
+
 ## Legal accuracy and use
 
 This software is an operational aid, not legal advice. Statutory deadlines and applicability can depend on entity type, facts, financial year, event date, extensions, exemptions, commencement notifications and amendments. Sample tasks are marked as illustrative and must not be treated as verified legal advice.
