@@ -9,7 +9,7 @@ A compliance operations workspace for Indian companies, LLPs and corporate compl
 - Compliance task register with status, due dates and priority
 - Search and filtering across compliance tasks
 - Statutory-source links and legal verification status
-- Versioned legal rules registry scaffold with approval validation, JSON import/export and automated tests
+- Versioned legal rules registry scaffold with source publication/reference metadata, reviewer queue, local change history, JSON import/export and automated tests
 - Export tasks to CSV
 - Clear separation between illustrative tasks and verified legal deadlines
 
@@ -23,7 +23,7 @@ No build tools are required for the current front-end MVP.
 
 ## Legal rules registry and validation
 
-The initial registry is `data/legal-rules.json`. It intentionally starts empty; no statutory deadlines are approved. Run `node scripts/validate-legal-rules.js` to validate it and `node --test scripts/validate-legal-rules.test.js scripts/legal-rules-registry-core.test.js` to run registry and browser-module tests. The screen loads the repository registry as its baseline and supports validated JSON import/export. Edits and imports remain browser-local and do not commit changes back to GitHub; update `data/legal-rules.json` through reviewed repository changes for a shared versioned update. The validator checks rule IDs, status values, dates, HTTPS source URLs, and mandatory evidence for rules marked approved. It does not independently verify that a cited source is authoritative or that a legal interpretation is correct; qualified human review remains required.
+The initial registry is `data/legal-rules.json`. It intentionally starts empty; no statutory deadlines are approved. Run `node scripts/validate-legal-rules.js` to validate it and `node --test scripts/validate-legal-rules.test.js scripts/legal-rules-registry-core.test.js` to run registry and browser-module tests. The screen loads the repository registry as its baseline and supports validated JSON import/export. Edits and imports remain browser-local and do not commit changes back to GitHub; update `data/legal-rules.json` through reviewed repository changes for a shared versioned update. The validator checks rule IDs, status values, source/review dates, HTTPS source URLs, and mandatory evidence for rules marked approved. The registry UI includes exact source references, source publication and checked dates, supersession links, a Research Needed / In Review queue, and local history events with change reasons. Registry JSON exports include history when available; the separate history export is a browser-local convenience, not tamper-proof audit evidence. It does not independently verify that a cited source is authoritative or that a legal interpretation is correct; qualified human review remains required.
 
 ## GitHub Pages deployment
 
@@ -56,7 +56,7 @@ This is a client-side prototype. Data is stored in the current browser using loc
 
 ## Suggested roadmap
 
-1. Legal rules registry with versioning and review workflow
+1. Secure server-side legal rule versioning, reviewer assignments and tamper-evident audit trail
 2. Secure backend and database
 3. Role-based access, client portal and audit log
 4. Document template engine and DOCX/PDF generation
