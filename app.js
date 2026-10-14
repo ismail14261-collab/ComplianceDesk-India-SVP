@@ -40,9 +40,18 @@
     } catch (error) { console.warn("Legal rules draft data could not be read.", error); }
     return [];
   }
-  function loadRuleHistory() {\n    try { const stored=localStorage.getItem(RULE_HISTORY_KEY); const parsed=stored?JSON.parse(stored):[]; return Array.isArray(parsed)?parsed:[]; }\n    catch(error) { console.warn("Legal rule history could not be read.",error); return []; }\n  }
-  function saveRuleHistory() {\n    try { localStorage.setItem(RULE_HISTORY_KEY,JSON.stringify(legalRuleHistory.slice(-1000))); return true; }\n    catch(error) { showToast("Could not save review history in this browser. Export the registry and history."); return false; }\n  }
-  function recordRuleHistory(entry) {\n    legalRuleHistory.push({eventId:uid(),at:new Date().toISOString(),...entry});\n    saveRuleHistory();\n  }
+  function loadRuleHistory() {
+    try { const stored=localStorage.getItem(RULE_HISTORY_KEY); const parsed=stored?JSON.parse(stored):[]; return Array.isArray(parsed)?parsed:[]; }
+    catch(error) { console.warn("Legal rule history could not be read.",error); return []; }
+  }
+  function saveRuleHistory() {
+    try { localStorage.setItem(RULE_HISTORY_KEY,JSON.stringify(legalRuleHistory.slice(-1000))); return true; }
+    catch(error) { showToast("Could not save review history in this browser. Export the registry and history."); return false; }
+  }
+  function recordRuleHistory(entry) {
+    legalRuleHistory.push({eventId:uid(),at:new Date().toISOString(),...entry});
+    saveRuleHistory();
+  }
   function saveLegalRules() {
     try { localStorage.setItem(RULES_STORE_KEY, JSON.stringify(legalRules)); return true; }
     catch (error) { showToast("Could not save rules in this browser. Export the registry backup."); return false; }
@@ -186,7 +195,9 @@
         <button class="button button-secondary" id="importRules">Import JSON</button><input type="file" id="importRulesFile" accept="application/json,.json" hidden><button class="button button-secondary" id="exportRules">Export JSON</button>
         <button class="button button-primary" id="newRule">＋ Add rule</button>
       </div>
-      <div class="rules-summary" id="rulesSummary"></div>\n      <section class="panel rules-panel" style="margin-bottom:16px"><div class="panel-heading"><div><h2>Research & reviewer queue</h2><p>Prioritise source research, peer review and regression scenarios.</p></div></div><div id="ruleReviewQueue" class="review-queue"></div></section>\n      <section class="panel rules-panel" style="margin-bottom:16px"><div class="panel-heading"><div><h2>Recent rule history</h2><p>Local audit events for edits and status transitions in this browser.</p></div><button class="button button-secondary" id="exportRuleHistory">Export history</button></div><div id="ruleHistoryList" class="rule-history-list"></div></section>
+      <div class="rules-summary" id="rulesSummary"></div>
+      <section class="panel rules-panel" style="margin-bottom:16px"><div class="panel-heading"><div><h2>Research & reviewer queue</h2><p>Prioritise source research, peer review and regression scenarios.</p></div></div><div id="ruleReviewQueue" class="review-queue"></div></section>
+      <section class="panel rules-panel" style="margin-bottom:16px"><div class="panel-heading"><div><h2>Recent rule history</h2><p>Local audit events for edits and status transitions in this browser.</p></div><button class="button button-secondary" id="exportRuleHistory">Export history</button></div><div id="ruleHistoryList" class="rule-history-list"></div></section>
       <section class="panel rules-panel"><div class="table-wrap"><table class="rules-table"><thead><tr><th>RULE / PROVISION</th><th>REGIME</th><th>STATUS</th><th>EFFECTIVE FROM</th><th>REVIEW EVIDENCE</th><th></th></tr></thead><tbody id="ruleRows"></tbody></table><div class="empty-state" id="rulesEmpty"><span>§</span><strong>No legal rules in this registry yet</strong><p>Add a draft rule record and attach its official source. Do not enter an unverified deadline as approved.</p></div></div><div class="table-footer"><span id="ruleCount">0 rules</span><span>Saved only in this browser; not shared or access-controlled.</span></div></section>
       <dialog id="ruleDialog" class="modal rules-modal">
         <form id="ruleForm">
@@ -198,7 +209,10 @@
             <label class="field field-wide">Rule title / provision <input name="title" required maxlength="200" placeholder="Act, section / rule and concise subject"></label>
             <label class="field">Legal regime <input name="regime" required maxlength="100" placeholder="e.g. Companies Act, 2013"></label>
             <label class="field">Primary authority <input name="primaryAuthority" required maxlength="140" placeholder="e.g. MCA / India Code"></label>
-            <label class="field field-wide">Official source URL <input name="sourceUrl" type="url" required maxlength="1000" placeholder="https://…"></label>\n            <label class="field field-wide">Exact source reference <input name="sourceReference" maxlength="240" placeholder="Gazette number, notification number, Act section / rule, circular reference"></label>\n            <label class="field">Source publication date <input name="sourcePublishedOn" type="date"></label>\n            <label class="field">Source last checked on <input name="sourceCheckedOn" type="date"></label>
+            <label class="field field-wide">Official source URL <input name="sourceUrl" type="url" required maxlength="1000" placeholder="https://…"></label>
+            <label class="field field-wide">Exact source reference <input name="sourceReference" maxlength="240" placeholder="Gazette number, notification number, Act section / rule, circular reference"></label>
+            <label class="field">Source publication date <input name="sourcePublishedOn" type="date"></label>
+            <label class="field">Source last checked on <input name="sourceCheckedOn" type="date"></label>
             <label class="field">Source type <select name="sourceType"><option value="Act">Act</option><option value="Rule">Rule</option><option value="Notification">Notification</option><option value="Circular">Circular</option><option value="Order">Order</option><option value="Official guidance">Official guidance</option><option value="Other">Other</option></select></label>
             <label class="field">Effective from <input name="effectiveFrom" type="date"></label>
             <label class="field field-wide">Applicability and scope <textarea name="applicability" rows="2" maxlength="2000" placeholder="Entity types, thresholds, exclusions and relevant conditions"></textarea></label>
@@ -208,7 +222,10 @@
             <label class="field field-wide">Required output / filing / action <textarea name="requiredOutput" rows="2" maxlength="1500" placeholder="Form, notice, register, approval or other output"></textarea></label>
             <label class="field">Reviewer <input name="reviewer" maxlength="140" placeholder="Qualified reviewer"></label>
             <label class="field">Reviewed on <input name="reviewedOn" type="date"></label>
-            <label class="field">Version <input name="version" required maxlength="40" value="1.0" placeholder="e.g. 1.0"></label>\n            <label class="field">Supersedes rule ID <input name="supersedes" maxlength="80" placeholder="Previous rule ID, if applicable"></label>\n            <label class="field">Superseded by rule ID <input name="supersededBy" maxlength="80" placeholder="Replacement rule ID, if known"></label>\n            <label class="field field-wide">Change reason / amendment note <textarea name="changeReason" rows="2" maxlength="1500" placeholder="Why this record is new or changed; amendment / notification effect, review findings, or status rationale"></textarea></label>
+            <label class="field">Version <input name="version" required maxlength="40" value="1.0" placeholder="e.g. 1.0"></label>
+            <label class="field">Supersedes rule ID <input name="supersedes" maxlength="80" placeholder="Previous rule ID, if applicable"></label>
+            <label class="field">Superseded by rule ID <input name="supersededBy" maxlength="80" placeholder="Replacement rule ID, if known"></label>
+            <label class="field field-wide">Change reason / amendment note <textarea name="changeReason" rows="2" maxlength="1500" placeholder="Why this record is new or changed; amendment / notification effect, review findings, or status rationale"></textarea></label>
             <label class="field field-wide">Test cases / scenarios <textarea name="testCases" rows="2" maxlength="2000" placeholder="Positive, negative, exemption and edge-case scenarios"></textarea></label>
             <label class="rule-check"><input name="sourceVerified" type="checkbox"> Official source checked against current text / version</label>
             <label class="rule-check"><input name="reviewerApproval" type="checkbox"> Reviewer has explicitly approved this record</label>
@@ -221,7 +238,8 @@
     $("#ruleSearch").addEventListener("input",renderRuleRows);
     $("#ruleStatusFilter").addEventListener("change",renderRuleRows);
     $("#newRule").addEventListener("click",()=>openRuleDialog());
-    $("#exportRules").addEventListener("click",exportRulesBackup);\n    $("#exportRuleHistory").addEventListener("click",exportRuleHistory);
+    $("#exportRules").addEventListener("click",exportRulesBackup);
+    $("#exportRuleHistory").addEventListener("click",exportRuleHistory);
     $("#importRules").addEventListener("click",()=>$("#importRulesFile").click());
     $("#importRulesFile").addEventListener("change",importRulesBackup);
     $("#ruleForm").addEventListener("submit",saveRuleFromForm);
@@ -235,7 +253,9 @@
     $("#ruleCount").textContent=rows.length+" "+(rows.length===1?"rule":"rules")+(rows.length!==legalRules.length?" shown":"");
     $("#rulesSummary").innerHTML='<span><strong>'+legalRules.length+'</strong> total records</span>'+["draft","research_needed","in_review","approved"].map(s=>'<span><strong>'+legalRules.filter(r=>r.status===s).length+'</strong> '+s.replaceAll("_"," ")+'</span>').join("");
     tbody.innerHTML=rows.map(r=>'<tr><td><div class="task-title">'+escapeHtml(r.title||"Untitled rule")+'</div><div class="task-subtitle">'+escapeHtml(r.ruleId)+' · '+escapeHtml(r.sourceType||"Source type not set")+'</div></td><td>'+escapeHtml(r.regime||"—")+'</td><td><span class="rule-status status-'+escapeHtml(r.status)+'">'+escapeHtml((r.status||"draft").replaceAll("_"," "))+'</span></td><td>'+escapeHtml(formatDate(r.effectiveFrom))+'</td><td><span class="rule-evidence">'+(r.sourceVerified?"Source checked":"Source not checked")+'<br>'+(r.reviewerApproval?"Reviewer approval recorded":"Approval not recorded")+'</span></td><td><button class="button button-secondary rule-edit" data-edit-rule="'+escapeHtml(r.ruleId)+'">Edit</button></td></tr>').join("");
-    tbody.querySelectorAll("[data-edit-rule]").forEach(button=>button.addEventListener("click",()=>openRuleDialog(button.dataset.editRule)));\n    renderRuleReviewQueue();\n    renderRuleHistory();
+    tbody.querySelectorAll("[data-edit-rule]").forEach(button=>button.addEventListener("click",()=>openRuleDialog(button.dataset.editRule)));
+    renderRuleReviewQueue();
+    renderRuleHistory();
   }
   function openRuleDialog(ruleId="") {
     const form=$("#ruleForm"); form.reset(); delete form.dataset.editId;
@@ -252,7 +272,10 @@
     const fd=new FormData(form);const status=String(fd.get("status"));const oldId=form.dataset.editId||"";
     const rule={ruleId:String(fd.get("ruleId")).trim(),status,title:String(fd.get("title")).trim(),regime:String(fd.get("regime")).trim(),primaryAuthority:String(fd.get("primaryAuthority")).trim(),sourceUrl:String(fd.get("sourceUrl")).trim(),sourceReference:String(fd.get("sourceReference")||"").trim(),sourcePublishedOn:String(fd.get("sourcePublishedOn")||""),sourceCheckedOn:String(fd.get("sourceCheckedOn")||""),sourceType:String(fd.get("sourceType")),effectiveFrom:String(fd.get("effectiveFrom")||""),applicability:String(fd.get("applicability")||"").trim(),exceptions:String(fd.get("exceptions")||"").trim(),triggerEvent:String(fd.get("triggerEvent")||"").trim(),deadlineMethod:String(fd.get("deadlineMethod")||"").trim(),requiredOutput:String(fd.get("requiredOutput")||"").trim(),reviewer:String(fd.get("reviewer")||"").trim(),reviewedOn:String(fd.get("reviewedOn")||""),version:String(fd.get("version")||"1.0").trim(),supersedes:String(fd.get("supersedes")||"").trim(),supersededBy:String(fd.get("supersededBy")||"").trim(),changeReason:String(fd.get("changeReason")||"").trim(),testCases:String(fd.get("testCases")||"").trim(),sourceVerified:form.elements.sourceVerified.checked,reviewerApproval:form.elements.reviewerApproval.checked,updatedAt:new Date().toISOString()};
     if(!/^https:\/\//i.test(rule.sourceUrl)){showToast("Source URL must use HTTPS.");return;}
-    for(const field of ["effectiveFrom","reviewedOn","sourcePublishedOn","sourceCheckedOn"]) if(rule[field]&&!LegalRulesCore.isDate(rule[field])){showToast(field+" must be a valid date.");return;}\n    if(rule.effectiveFrom&&rule.reviewedOn&&rule.reviewedOn<rule.effectiveFrom){showToast("Review date cannot be earlier than the rule effective date.");return;}\n    if(rule.sourceCheckedOn&&rule.reviewedOn&&rule.sourceCheckedOn>rule.reviewedOn){showToast("Source check date cannot be later than the review date.");return;}\n    if(oldId&&!rule.changeReason){showToast("Add a change reason for every edit or status transition so the history is meaningful.");return;}
+    for(const field of ["effectiveFrom","reviewedOn","sourcePublishedOn","sourceCheckedOn"]) if(rule[field]&&!LegalRulesCore.isDate(rule[field])){showToast(field+" must be a valid date.");return;}
+    if(rule.effectiveFrom&&rule.reviewedOn&&rule.reviewedOn<rule.effectiveFrom){showToast("Review date cannot be earlier than the rule effective date.");return;}
+    if(rule.sourceCheckedOn&&rule.reviewedOn&&rule.sourceCheckedOn>rule.reviewedOn){showToast("Source check date cannot be later than the review date.");return;}
+    if(oldId&&!rule.changeReason){showToast("Add a change reason for every edit or status transition so the history is meaningful.");return;}
     if(status==="approved"){
       const required=["applicability","exceptions","triggerEvent","deadlineMethod","requiredOutput","reviewer","reviewedOn","testCases"];
       const missing=required.filter(key=>!rule[key]);
