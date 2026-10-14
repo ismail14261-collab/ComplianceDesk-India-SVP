@@ -19,6 +19,8 @@ const APPROVAL_REQUIRED_FIELDS = [
   "regime",
   "primaryAuthority",
   "sourceUrl",
+  "sourceReference",
+  "sourceCheckedOn",
   "sourceType",
   "effectiveFrom",
   "applicability",
