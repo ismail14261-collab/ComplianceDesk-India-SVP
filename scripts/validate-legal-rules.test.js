@@ -63,10 +63,12 @@ test("rejects duplicate rule IDs", () => {
 test("rejects invalid dates and reversed effective dates", () => {
   const rule = validApprovedRule();
   rule.effectiveFrom = "2026-02-30";
+  const invalidDateErrors = validateRegistry({ schemaVersion: 1, rules: [rule] });
+  assert.ok(invalidDateErrors.some(error => error.includes("effectiveFrom must be a real")));
+  rule.effectiveFrom = "2026-02-01";
   rule.effectiveTo = "2025-01-01";
-  const errors = validateRegistry({ schemaVersion: 1, rules: [rule] });
-  assert.ok(errors.some(error => error.includes("effectiveFrom must be a real")));
-  assert.ok(errors.some(error => error.includes("effectiveTo cannot be earlier")));
+  const reversedDateErrors = validateRegistry({ schemaVersion: 1, rules: [rule] });
+  assert.ok(reversedDateErrors.some(error => error.includes("effectiveTo cannot be earlier")));
 });
 
 test("does not allow approval without explicit source verification", () => {
