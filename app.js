@@ -26,8 +26,21 @@
   };
   let state = loadState();
   let activeView = "overview";
+  const RULES_STORE_KEY = "complianceDeskIndia.legalRules.v1";
+  let legalRules = loadLegalRules();
   let toastTimer;
 
+  function loadLegalRules() {
+    try {
+      const stored = localStorage.getItem(RULES_STORE_KEY);
+      if (stored) { const parsed = JSON.parse(stored); if (Array.isArray(parsed)) return parsed; }
+    } catch (error) { console.warn("Legal rules draft data could not be read.", error); }
+    return [];
+  }
+  function saveLegalRules() {
+    try { localStorage.setItem(RULES_STORE_KEY, JSON.stringify(legalRules)); return true; }
+    catch (error) { showToast("Could not save rules in this browser. Export the registry backup."); return false; }
+  }
   function loadState() {
     try {
       const stored = localStorage.getItem(STORE_KEY);
@@ -154,6 +167,99 @@
       ["Reserve Bank of India","Directions and regulatory materials relevant to RBI-regulated entities and applicable FEMA matters.","https://www.rbi.org.in/","Open RBI ↗"]
     ].map(x=>'<article class="legal-card"><h3>'+escapeHtml(x[0])+'</h3><p>'+escapeHtml(x[1])+'</p><a href="'+escapeHtml(x[2])+'" target="_blank" rel="noopener noreferrer">'+escapeHtml(x[3])+'</a></article>').join("")+'</div><p class="form-hint">A link to an official portal does not itself verify a specific compliance deadline. Record the exact provision, effective date, source version and reviewer for each production rule.</p>';
   }
+  function renderRulesRegistry() {
+    const root = $("#viewContent");
+    if (!root) return;
+    const statusOptions = ["draft","research_needed","in_review","approved","suspended","superseded"];
+    root.innerHTML = `
+      <div class="view-heading"><h2>Legal rules registry</h2><p class="page-subtitle">Create traceable rule records and review evidence. This local prototype does not calculate statutory deadlines.</p></div>
+      <div class="notice" role="note"><span class="notice-icon">!</span><div><strong>Approval safeguard</strong><p>Only qualified, source-backed review should approve a rule. The interface checks record completeness, not legal correctness. Do not treat a saved or “approved” record as legal advice.</p></div></div>
+      <div class="rules-toolbar">
+        <label class="search-box"><span>⌕</span><input id="ruleSearch" type="search" placeholder="Search title, Act, section or ID…" aria-label="Search legal rules"></label>
+        <select id="ruleStatusFilter" aria-label="Filter legal rules"><option value="all">All statuses</option>${statusOptions.map(s=>'<option value="'+s+'">'+s.replaceAll("_"," ")+'</option>').join("")}</select>
+        <button class="button button-secondary" id="exportRules">Export JSON</button>
+        <button class="button button-primary" id="newRule">＋ Add rule</button>
+      </div>
+      <div class="rules-summary" id="rulesSummary"></div>
+      <section class="panel rules-panel"><div class="table-wrap"><table class="rules-table"><thead><tr><th>RULE / PROVISION</th><th>REGIME</th><th>STATUS</th><th>EFFECTIVE FROM</th><th>REVIEW EVIDENCE</th><th></th></tr></thead><tbody id="ruleRows"></tbody></table><div class="empty-state" id="rulesEmpty"><span>§</span><strong>No legal rules in this registry yet</strong><p>Add a draft rule record and attach its official source. Do not enter an unverified deadline as approved.</p></div></div><div class="table-footer"><span id="ruleCount">0 rules</span><span>Saved only in this browser; not shared or access-controlled.</span></div></section>
+      <dialog id="ruleDialog" class="modal rules-modal">
+        <form id="ruleForm">
+          <div class="modal-header"><div><div class="eyebrow">VERSIONED RULE RECORD</div><h2 id="ruleFormTitle">Add legal rule</h2></div><button type="button" class="close-button" data-close="ruleDialog" aria-label="Close">×</button></div>
+          <p class="form-hint">Use exact references and official source links. Leave uncertain facts blank and set status to “research needed”. No statutory due-date calculation is performed by this screen.</p>
+          <div class="form-grid">
+            <label class="field">Rule ID <input name="ruleId" required maxlength="80" placeholder="e.g. CA-2013-S166-001"></label>
+            <label class="field">Status <select name="status">${statusOptions.map(s=>'<option value="'+s+'">'+s.replaceAll("_"," ")+'</option>').join("")}</select></label>
+            <label class="field field-wide">Rule title / provision <input name="title" required maxlength="200" placeholder="Act, section / rule and concise subject"></label>
+            <label class="field">Legal regime <input name="regime" required maxlength="100" placeholder="e.g. Companies Act, 2013"></label>
+            <label class="field">Primary authority <input name="primaryAuthority" required maxlength="140" placeholder="e.g. MCA / India Code"></label>
+            <label class="field field-wide">Official source URL <input name="sourceUrl" type="url" required maxlength="1000" placeholder="https://…"></label>
+            <label class="field">Source type <select name="sourceType"><option value="Act">Act</option><option value="Rule">Rule</option><option value="Notification">Notification</option><option value="Circular">Circular</option><option value="Order">Order</option><option value="Official guidance">Official guidance</option><option value="Other">Other</option></select></label>
+            <label class="field">Effective from <input name="effectiveFrom" type="date"></label>
+            <label class="field field-wide">Applicability and scope <textarea name="applicability" rows="2" maxlength="2000" placeholder="Entity types, thresholds, exclusions and relevant conditions"></textarea></label>
+            <label class="field field-wide">Exceptions / exemptions <textarea name="exceptions" rows="2" maxlength="2000" placeholder="Exemptions, provisos, exceptions and caveats"></textarea></label>
+            <label class="field field-wide">Trigger event / starting point <textarea name="triggerEvent" rows="2" maxlength="1500" placeholder="What event starts the obligation? Do not assume a trigger."></textarea></label>
+            <label class="field field-wide">Deadline method / computation notes <textarea name="deadlineMethod" rows="2" maxlength="2000" placeholder="Describe the legal computation method and source; do not enter an unsupported date."></textarea></label>
+            <label class="field field-wide">Required output / filing / action <textarea name="requiredOutput" rows="2" maxlength="1500" placeholder="Form, notice, register, approval or other output"></textarea></label>
+            <label class="field">Reviewer <input name="reviewer" maxlength="140" placeholder="Qualified reviewer"></label>
+            <label class="field">Reviewed on <input name="reviewedOn" type="date"></label>
+            <label class="field">Version <input name="version" required maxlength="40" value="1.0" placeholder="e.g. 1.0"></label>
+            <label class="field field-wide">Test cases / scenarios <textarea name="testCases" rows="2" maxlength="2000" placeholder="Positive, negative, exemption and edge-case scenarios"></textarea></label>
+            <label class="rule-check"><input name="sourceVerified" type="checkbox"> Official source checked against current text / version</label>
+            <label class="rule-check"><input name="reviewerApproval" type="checkbox"> Reviewer has explicitly approved this record</label>
+          </div>
+          <div class="rule-approval-note">Marking these boxes is a user assertion, not an independent legal verification. Preserve source versions and review evidence before production use.</div>
+          <div class="modal-footer"><button type="button" class="button button-secondary" data-close="ruleDialog">Cancel</button><button type="submit" class="button button-primary">Save rule record</button></div>
+        </form>
+      </dialog>`;
+    renderRuleRows();
+    $("#ruleSearch").addEventListener("input",renderRuleRows);
+    $("#ruleStatusFilter").addEventListener("change",renderRuleRows);
+    $("#newRule").addEventListener("click",()=>openRuleDialog());
+    $("#exportRules").addEventListener("click",exportRulesBackup);
+    $("#ruleForm").addEventListener("submit",saveRuleFromForm);
+  }
+  function renderRuleRows() {
+    const tbody=$("#ruleRows"); if(!tbody)return;
+    const q=($("#ruleSearch")?.value||"").trim().toLowerCase();
+    const status=$("#ruleStatusFilter")?.value||"all";
+    const rows=legalRules.filter(r=>(status==="all"||r.status===status)&&(!q||[r.ruleId,r.title,r.regime,r.primaryAuthority,r.applicability,r.exceptions].join(" ").toLowerCase().includes(q)));
+    $("#rulesEmpty").hidden=rows.length>0;
+    $("#ruleCount").textContent=rows.length+" "+(rows.length===1?"rule":"rules")+(rows.length!==legalRules.length?" shown":"");
+    $("#rulesSummary").innerHTML='<span><strong>'+legalRules.length+'</strong> total records</span>'+["draft","research_needed","in_review","approved"].map(s=>'<span><strong>'+legalRules.filter(r=>r.status===s).length+'</strong> '+s.replaceAll("_"," ")+'</span>').join("");
+    tbody.innerHTML=rows.map(r=>'<tr><td><div class="task-title">'+escapeHtml(r.title||"Untitled rule")+'</div><div class="task-subtitle">'+escapeHtml(r.ruleId)+' · '+escapeHtml(r.sourceType||"Source type not set")+'</div></td><td>'+escapeHtml(r.regime||"—")+'</td><td><span class="rule-status status-'+escapeHtml(r.status)+'">'+escapeHtml((r.status||"draft").replaceAll("_"," "))+'</span></td><td>'+escapeHtml(formatDate(r.effectiveFrom))+'</td><td><span class="rule-evidence">'+(r.sourceVerified?"Source checked":"Source not checked")+'<br>'+(r.reviewerApproval?"Reviewer approval recorded":"Approval not recorded")+'</span></td><td><button class="button button-secondary rule-edit" data-edit-rule="'+escapeHtml(r.ruleId)+'">Edit</button></td></tr>').join("");
+    tbody.querySelectorAll("[data-edit-rule]").forEach(button=>button.addEventListener("click",()=>openRuleDialog(button.dataset.editRule)));
+  }
+  function openRuleDialog(ruleId="") {
+    const form=$("#ruleForm"); form.reset(); delete form.dataset.editId;
+    $("#ruleFormTitle").textContent=ruleId?"Edit legal rule":"Add legal rule";
+    if(ruleId){
+      const rule=legalRules.find(r=>r.ruleId===ruleId);if(!rule)return;
+      for(const key of ["ruleId","status","title","regime","primaryAuthority","sourceUrl","sourceType","effectiveFrom","applicability","exceptions","triggerEvent","deadlineMethod","requiredOutput","reviewer","reviewedOn","version","testCases"]) if(form.elements[key])form.elements[key].value=rule[key]??"";
+      form.elements.sourceVerified.checked=Boolean(rule.sourceVerified);form.elements.reviewerApproval.checked=Boolean(rule.reviewerApproval);form.elements.ruleId.readOnly=true;form.dataset.editId=ruleId;
+    } else { form.elements.ruleId.readOnly=false;form.elements.version.value="1.0";form.elements.status.value="draft"; }
+    $("#ruleDialog").showModal();
+  }
+  function saveRuleFromForm(event) {
+    event.preventDefault();const form=event.currentTarget;if(!form.reportValidity())return;
+    const fd=new FormData(form);const status=String(fd.get("status"));const oldId=form.dataset.editId||"";
+    const rule={ruleId:String(fd.get("ruleId")).trim(),status,title:String(fd.get("title")).trim(),regime:String(fd.get("regime")).trim(),primaryAuthority:String(fd.get("primaryAuthority")).trim(),sourceUrl:String(fd.get("sourceUrl")).trim(),sourceType:String(fd.get("sourceType")),effectiveFrom:String(fd.get("effectiveFrom")||""),applicability:String(fd.get("applicability")||"").trim(),exceptions:String(fd.get("exceptions")||"").trim(),triggerEvent:String(fd.get("triggerEvent")||"").trim(),deadlineMethod:String(fd.get("deadlineMethod")||"").trim(),requiredOutput:String(fd.get("requiredOutput")||"").trim(),reviewer:String(fd.get("reviewer")||"").trim(),reviewedOn:String(fd.get("reviewedOn")||""),version:String(fd.get("version")||"1.0").trim(),testCases:String(fd.get("testCases")||"").trim(),sourceVerified:form.elements.sourceVerified.checked,reviewerApproval:form.elements.reviewerApproval.checked,updatedAt:new Date().toISOString()};
+    if(!/^https:\/\//i.test(rule.sourceUrl)){showToast("Source URL must use HTTPS.");return;}
+    if(rule.effectiveFrom&&rule.reviewedOn&&rule.reviewedOn<rule.effectiveFrom){showToast("Review date cannot be earlier than the rule effective date.");return;}
+    if(status==="approved"){
+      const required=["applicability","exceptions","triggerEvent","deadlineMethod","requiredOutput","reviewer","reviewedOn","testCases"];
+      const missing=required.filter(key=>!rule[key]);
+      if(missing.length||!rule.effectiveFrom||!rule.sourceVerified||!rule.reviewerApproval){showToast("Approval blocked: complete scope, exceptions, trigger, deadline method, output, reviewer, review date, test cases, effective date and both review confirmations.");return;}
+    }
+    const duplicate=legalRules.some(r=>r.ruleId.toLowerCase()===rule.ruleId.toLowerCase()&&r.ruleId!==oldId);
+    if(duplicate){showToast("Rule ID already exists. Use a unique ID.");return;}
+    if(oldId)legalRules=legalRules.map(r=>r.ruleId===oldId?rule:r);else legalRules.push(rule);
+    saveLegalRules();$("#ruleDialog").close();renderRuleRows();showToast("Rule record saved in this browser only.");
+  }
+  function exportRulesBackup() {
+    const payload={schemaVersion:1,registryName:"ComplianceDesk India Legal Rules Registry",notice:"Exported local records are not independently verified. An approved status is a recorded reviewer assertion, not a guarantee of legal correctness.",exportedAt:new Date().toISOString(),rules:legalRules};
+    downloadBlob(new Blob([JSON.stringify(payload,null,2)],{type:"application/json"}),"compliance-desk-legal-rules-"+isoToday()+".json");
+    showToast("Legal rules registry exported.");
+  }
   function renderDocuments() {
     const root = $("#viewContent");
     if (!root) return;
@@ -222,6 +328,7 @@
     if(activeView==="entities")renderEntities();
     if(activeView==="calendar")renderCalendar();
     if(activeView==="legal")renderLegal();
+    if(activeView==="rules")renderRulesRegistry();
     if(activeView==="documents")renderDocuments();
     if(activeView==="settings")renderSettings();
   }
@@ -232,6 +339,7 @@
     calendar:["Due dates","Due date view","See dated tasks in chronological order."],
     documents:["Document centre","Document centre","Organise statutory drafting and supporting evidence."],
     legal:["Legal library","Legal library","Start with primary legislation and official regulatory sources."],
+    rules:["Legal rules registry","Legal rules registry","Maintain source-backed, versioned rule records with explicit review controls."],
     settings:["Settings & data","Workspace settings","Manage prototype data and review production readiness."]
   };
   function navigate(view) {
@@ -251,6 +359,7 @@
       if(view==="entities")renderEntities();
       else if(view==="calendar")renderCalendar();
       else if(view==="legal")renderLegal();
+      else if(view==="rules")renderRulesRegistry();
       else if(view==="documents")renderDocuments();
       else if(view==="settings")renderSettings();
       else if(view==="compliance") {
