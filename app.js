@@ -30,7 +30,7 @@
   const RULE_HISTORY_KEY = "complianceDeskIndia.legalRuleHistory.v1";
   let legalRules = loadLegalRules();
   let legalRuleHistory = loadRuleHistory();
-  const localRuleIds = new Set();
+  let localRuleIds = new Set();
   let toastTimer;
 
   function loadLegalRules() {
@@ -40,7 +40,10 @@
     } catch (error) { console.warn("Legal rules draft data could not be read.", error); }
     return [];
   }
-  function loadRuleHistory() {\n    try { const stored=localStorage.getItem(RULE_HISTORY_KEY); const parsed=stored?JSON.parse(stored):[]; return Array.isArray(parsed)?parsed:[]; }\n    catch(error) { console.warn("Legal rule history could not be read.",error); return []; }\n  }\n  function saveRuleHistory() {\n    try { localStorage.setItem(RULE_HISTORY_KEY,JSON.stringify(legalRuleHistory.slice(-1000))); return true; }\n    catch(error) { showToast("Could not save review history in this browser. Export the registry and history."); return false; }\n  }\n  function recordRuleHistory(entry) {\n    legalRuleHistory.push({eventId:uid(),at:new Date().toISOString(),...entry});\n    saveRuleHistory();\n  }\n  function saveLegalRules() {
+  function loadRuleHistory() {\n    try { const stored=localStorage.getItem(RULE_HISTORY_KEY); const parsed=stored?JSON.parse(stored):[]; return Array.isArray(parsed)?parsed:[]; }\n    catch(error) { console.warn("Legal rule history could not be read.",error); return []; }\n  }
+  function saveRuleHistory() {\n    try { localStorage.setItem(RULE_HISTORY_KEY,JSON.stringify(legalRuleHistory.slice(-1000))); return true; }\n    catch(error) { showToast("Could not save review history in this browser. Export the registry and history."); return false; }\n  }
+  function recordRuleHistory(entry) {\n    legalRuleHistory.push({eventId:uid(),at:new Date().toISOString(),...entry});\n    saveRuleHistory();\n  }
+  function saveLegalRules() {
     try { localStorage.setItem(RULES_STORE_KEY, JSON.stringify(legalRules)); return true; }
     catch (error) { showToast("Could not save rules in this browser. Export the registry backup."); return false; }
   }
@@ -260,7 +263,10 @@
     const candidate=oldId?legalRules.map(r=>r.ruleId===oldId?rule:r):[...legalRules,rule];
     const schemaErrors=LegalRulesCore.validateRegistry({schemaVersion:1,rules:candidate.map(LegalRulesCore.toRegistryRule)});
     if(schemaErrors.length){showToast("Registry validation failed: "+schemaErrors[0]);return;}
-    const previous=oldId?legalRules.find(r=>r.ruleId===oldId):null;\n    legalRules=candidate;localRuleIds.add(rule.ruleId);saveLegalRules();\n    recordRuleHistory({ruleId:rule.ruleId,action:previous?(previous.status===rule.status?"updated":"status_transition"):"created",fromStatus:previous?.status||"",toStatus:rule.status,version:rule.version,changeReason:rule.changeReason||"Initial record created",sourceReference:rule.sourceReference||"",snapshot:LegalRulesCore.toRegistryRule(rule)});\n    $("#ruleDialog").close();renderRuleRows();showToast("Rule record and local history saved in this browser only.");
+    const previous=oldId?legalRules.find(r=>r.ruleId===oldId):null;
+    legalRules=candidate;localRuleIds.add(rule.ruleId);saveLegalRules();
+    recordRuleHistory({ruleId:rule.ruleId,action:previous?(previous.status===rule.status?"updated":"status_transition"):"created",fromStatus:previous?.status||"",toStatus:rule.status,version:rule.version,changeReason:rule.changeReason||"Initial record created",sourceReference:rule.sourceReference||"",snapshot:LegalRulesCore.toRegistryRule(rule)});
+    $("#ruleDialog").close();renderRuleRows();showToast("Rule record and local history saved in this browser only.");
   }
   function exportRulesBackup() {
     const payload={schemaVersion:1,registryName:"ComplianceDesk India Legal Rules Registry",notice:"Exported records are not independently verified. An approved status is a recorded reviewer assertion, not a guarantee of legal correctness.",exportedAt:new Date().toISOString(),rules:legalRules.map(LegalRulesCore.toRegistryRule),history:legalRuleHistory};
@@ -275,7 +281,10 @@
       if(errors.length){showToast("Import rejected: "+errors.slice(0,2).join(" "));return;}
       const incoming=imported.rules.map(LegalRulesCore.toUiRule);
       if(!confirm("Import "+incoming.length+" rule record(s) and replace this browser's current legal rules list? Export a backup first if needed. This does not update the repository file."))return;
-      legalRules=incoming;localRuleIds=new Set(incoming.map(r=>r.ruleId));saveLegalRules();\n      if(Array.isArray(imported.history)){legalRuleHistory=imported.history.filter(e=>e&&typeof e==="object").slice(-1000);saveRuleHistory();}\n      recordRuleHistory({ruleId:"*",action:"registry_imported",fromStatus:"",toStatus:"",version:"",changeReason:"Imported registry backup",sourceReference:file.name});\n      renderRuleRows();showToast("Registry imported and validated in this browser.");
+      legalRules=incoming;localRuleIds=new Set(incoming.map(r=>r.ruleId));saveLegalRules();
+      if(Array.isArray(imported.history)){legalRuleHistory=imported.history.filter(e=>e&&typeof e==="object").slice(-1000);saveRuleHistory();}
+      recordRuleHistory({ruleId:"*",action:"registry_imported",fromStatus:"",toStatus:"",version:"",changeReason:"Imported registry backup",sourceReference:file.name});
+      renderRuleRows();showToast("Registry imported and validated in this browser.");
     }catch(error){showToast("Could not import JSON. Choose a valid registry export.");}
     finally{event.target.value="";}
   }
