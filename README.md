@@ -9,6 +9,7 @@ A compliance operations workspace for Indian companies, LLPs and corporate compl
 - Compliance task register with status, due dates and priority
 - Search and filtering across compliance tasks
 - Statutory-source links and legal verification status
+- Versioned legal rules registry scaffold with approval validation and automated tests
 - Export tasks to CSV
 - Clear separation between illustrative tasks and verified legal deadlines
 
@@ -19,6 +20,10 @@ No build tools are required for the current front-end MVP.
 1. Download or clone this repository.
 2. Open `index.html` in a modern browser.
 3. For a local development server, run `python -m http.server 8000` from the project directory and open `http://localhost:8000`.
+
+## Legal rules registry and validation
+
+The initial registry is `data/legal-rules.json`. It intentionally starts empty; no statutory deadlines are approved. Run `node scripts/validate-legal-rules.js` to validate it and `node --test scripts/validate-legal-rules.test.js` to run approval-gate tests. The validator checks rule IDs, status values, dates, HTTPS source URLs, and mandatory evidence for rules marked approved. It does not independently verify that a cited source is authoritative or that a legal interpretation is correct; qualified human review remains required.
 
 ## Legal accuracy and use
 
