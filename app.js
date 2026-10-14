@@ -164,7 +164,7 @@
       ["LLP agreement workflow","Initial agreement, supplementary agreement, amendments and partner-change documentation.","Planned module"],
       ["Statutory registers","Structured register templates and change history.","Planned module"],
       ["Filing evidence vault","Acknowledgements, challans, filed forms and source documents with access controls.","Planned module"]
-    ].map(x=>'<article class="legal-card"><h3>'+escapeHtml(x[0])+'</h3><p>'+escapeHtml(x[1])+'</p><span class="pill review">'+escapeHtml(x[2])+'</span></article>').join("")+'</div><div class="notice" style="margin-top:16px"><span class="notice-icon">i</span><div><strong>Drafting safeguards</strong><p>Generated legal documents should be reviewed against current law, the entity's constitutional documents and actual facts before signature or filing.</p></div></div>';
+    ].map(x=>'<article class="legal-card"><h3>'+escapeHtml(x[0])+'</h3><p>'+escapeHtml(x[1])+'</p><span class="pill review">'+escapeHtml(x[2])+'</span></article>').join("")+'</div><div class="notice" style="margin-top:16px"><span class="notice-icon">i</span><div><strong>Drafting safeguards</strong><p>Generated legal documents should be reviewed against current law, the entity&#39;s constitutional documents and actual facts before signature or filing.</p></div></div>';
   }
   function renderSettings() {
     const root = $("#viewContent");
