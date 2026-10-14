@@ -177,7 +177,7 @@
       <div class="rules-toolbar">
         <label class="search-box"><span>⌕</span><input id="ruleSearch" type="search" placeholder="Search title, Act, section or ID…" aria-label="Search legal rules"></label>
         <select id="ruleStatusFilter" aria-label="Filter legal rules"><option value="all">All statuses</option>${statusOptions.map(s=>'<option value="'+s+'">'+s.replaceAll("_"," ")+'</option>').join("")}</select>
-        <button class="button button-secondary" id="exportRules">Export JSON</button>
+        <button class="button button-secondary" id="importRules">Import JSON</button><input type="file" id="importRulesFile" accept="application/json,.json" hidden><button class="button button-secondary" id="exportRules">Export JSON</button>
         <button class="button button-primary" id="newRule">＋ Add rule</button>
       </div>
       <div class="rules-summary" id="rulesSummary"></div>
@@ -216,6 +216,8 @@
     $("#ruleStatusFilter").addEventListener("change",renderRuleRows);
     $("#newRule").addEventListener("click",()=>openRuleDialog());
     $("#exportRules").addEventListener("click",exportRulesBackup);
+    $("#importRules").addEventListener("click",()=>$("#importRulesFile").click());
+    $("#importRulesFile").addEventListener("change",importRulesBackup);
     $("#ruleForm").addEventListener("submit",saveRuleFromForm);
   }
   function renderRuleRows() {
@@ -252,13 +254,40 @@
     }
     const duplicate=legalRules.some(r=>r.ruleId.toLowerCase()===rule.ruleId.toLowerCase()&&r.ruleId!==oldId);
     if(duplicate){showToast("Rule ID already exists. Use a unique ID.");return;}
-    if(oldId)legalRules=legalRules.map(r=>r.ruleId===oldId?rule:r);else legalRules.push(rule);
-    saveLegalRules();$("#ruleDialog").close();renderRuleRows();showToast("Rule record saved in this browser only.");
+    const candidate=oldId?legalRules.map(r=>r.ruleId===oldId?rule:r):[...legalRules,rule];
+    const schemaErrors=LegalRulesCore.validateRegistry({schemaVersion:1,rules:candidate.map(LegalRulesCore.toRegistryRule)});
+    if(schemaErrors.length){showToast("Registry validation failed: "+schemaErrors[0]);return;}
+    legalRules=candidate;localRuleIds.add(rule.ruleId);saveLegalRules();$("#ruleDialog").close();renderRuleRows();showToast("Rule record saved in this browser only.");
   }
   function exportRulesBackup() {
-    const payload={schemaVersion:1,registryName:"ComplianceDesk India Legal Rules Registry",notice:"Exported local records are not independently verified. An approved status is a recorded reviewer assertion, not a guarantee of legal correctness.",exportedAt:new Date().toISOString(),rules:legalRules};
+    const payload={schemaVersion:1,registryName:"ComplianceDesk India Legal Rules Registry",notice:"Exported records are not independently verified. An approved status is a recorded reviewer assertion, not a guarantee of legal correctness.",exportedAt:new Date().toISOString(),rules:legalRules.map(LegalRulesCore.toRegistryRule)};
     downloadBlob(new Blob([JSON.stringify(payload,null,2)],{type:"application/json"}),"compliance-desk-legal-rules-"+isoToday()+".json");
     showToast("Legal rules registry exported.");
+  }
+  async function importRulesBackup(event) {
+    const file=event.target.files?.[0];if(!file)return;
+    try{
+      const imported=JSON.parse(await file.text());
+      const errors=LegalRulesCore.validateRegistry(imported);
+      if(errors.length){showToast("Import rejected: "+errors.slice(0,2).join(" "));return;}
+      const incoming=imported.rules.map(LegalRulesCore.toUiRule);
+      if(!confirm("Import "+incoming.length+" rule record(s) and replace this browser's current legal rules list? Export a backup first if needed. This does not update the repository file."))return;
+      legalRules=incoming;localRuleIds=new Set(incoming.map(r=>r.ruleId));saveLegalRules();renderRuleRows();showToast("Registry imported and validated in this browser.");
+    }catch(error){showToast("Could not import JSON. Choose a valid registry export.");}
+    finally{event.target.value="";}
+  }
+  async function loadVersionedRegistry(){
+    try{
+      const response=await fetch("data/legal-rules.json",{cache:"no-store"});
+      if(!response.ok)throw new Error("HTTP "+response.status);
+      const registry=await response.json();const errors=LegalRulesCore.validateRegistry(registry);
+      if(errors.length)throw new Error(errors[0]);
+      const base=registry.rules.map(LegalRulesCore.toUiRule);
+      const local=loadLegalRules();const localById=new Map(local.map(r=>[r.ruleId.toLowerCase(),r]));
+      legalRules=[...base.filter(r=>!localById.has(r.ruleId.toLowerCase())),...local];
+      localRuleIds=new Set(local.map(r=>r.ruleId));
+      if(activeView==="rules")renderRulesRegistry();
+    }catch(error){console.warn("Versioned repository registry could not be loaded; using browser-local records.",error);}
   }
   function renderDocuments() {
     const root = $("#viewContent");
@@ -427,4 +456,5 @@
   $("#todayLabel").textContent=new Intl.DateTimeFormat("en-IN",{weekday:"short",day:"numeric",month:"short",year:"numeric"}).format(today);
   $("#yearLabel").textContent=today.getFullYear();
   refresh();
+  loadVersionedRegistry();
 })();
