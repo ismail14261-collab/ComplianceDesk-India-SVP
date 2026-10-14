@@ -32,7 +32,11 @@ jobs:
         run: |
           grep -q "Illustrative" app.js
           grep -q "not verified legal deadlines" index.html
-          grep -q "LEGAL-RULES-REGISTER" README.md || true
+          grep -q "LEGAL-RULES-REGISTER" README.md
+      - name: Validate legal rules registry
+        run: node scripts/validate-legal-rules.js
+      - name: Run legal rules registry tests
+        run: node --test scripts/validate-legal-rules.test.js
 
   deploy:
     if: github.ref == 'refs/heads/main'
