@@ -10,3 +10,6 @@ test("round-trips structured applicability, exceptions and test cases",()=>{cons
 test("rejects impossible calendar dates",()=>assert.ok(validateRegistry({schemaVersion:1,rules:[{ruleId:"A",status:"draft",effectiveFrom:"2026-02-30"}]}).some(e=>e.includes("real YYYY-MM-DD"))));
 
 test("preserves structured imported fields when unchanged",()=>{const source={schemaVersion:1,rules:[{ruleId:"STRUCT-1",status:"draft",applicability:{entityTypes:["company"],conditions:["threshold"]},exceptions:[{reference:"proviso"}],testCases:[{scenario:"ordinary",expected:"review"}]}]};const roundTrip=toRegistryRule(toUiRule(source.rules[0]));assert.deepEqual(roundTrip.applicability,source.rules[0].applicability);assert.deepEqual(roundTrip.exceptions,source.rules[0].exceptions);assert.deepEqual(roundTrip.testCases,source.rules[0].testCases);});
+
+test("validates source publication and checked dates",()=>{const r={ruleId:"SRC-1",status:"draft",sourcePublishedOn:"2026-02-30"};assert.ok(validateRegistry({schemaVersion:1,rules:[r]}).some(e=>e.includes("sourcePublishedOn")));});
+test("rejects source checked date earlier than publication date",()=>{const r={ruleId:"SRC-2",status:"draft",sourcePublishedOn:"2026-02-01",sourceCheckedOn:"2026-01-31"};assert.ok(validateRegistry({schemaVersion:1,rules:[r]}).some(e=>e.includes("sourceCheckedOn cannot be earlier")));});
