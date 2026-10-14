@@ -1,0 +1,55 @@
+name: Validate and deploy ComplianceDesk India
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "github-pages"
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Validate JavaScript syntax
+        run: node --check app.js
+      - name: Check required static files
+        run: |
+          test -s index.html
+          test -s styles.css
+          test -s app.js
+          test -s README.md
+      - name: Verify key legal-safety notices exist
+        run: |
+          grep -q "Illustrative" app.js
+          grep -q "not verified legal deadlines" index.html
+          grep -q "LEGAL-RULES-REGISTER" README.md || true
+
+  deploy:
+    if: github.ref == 'refs/heads/main'
+    needs: validate
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+      - name: Upload static site
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: .
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
