@@ -1,7 +1,7 @@
 ;(function(root,factory){const api=factory();if(typeof module==="object"&&module.exports)module.exports=api;else root.LegalRulesCore=api;})(typeof globalThis!=="undefined"?globalThis:this,function(){
 "use strict";
 const STATUSES=["draft","research_needed","in_review","approved","suspended","superseded"];
-const REQUIRED=["ruleId","title","regime","primaryAuthority","sourceUrl","sourceType","effectiveFrom","applicability","exceptions","triggerEvent","deadlineMethod","requiredOutput","reviewer","reviewedOn","version","testCases","sourceVerified","reviewerApproval"];
+const REQUIRED=["ruleId","title","regime","primaryAuthority","sourceUrl","sourceType","effectiveFrom","applicability","exceptions","triggerEvent","deadlineMethod","requiredOutput","reviewer","reviewedOn","version","testCases","sourceVerified","reviewerApproval"];\nconst DATE_FIELDS=["effectiveFrom","effectiveTo","reviewedOn","sourcePublishedOn","sourceCheckedOn"];
 function isDate(v){if(typeof v!=="string"||!/^\d{4}-\d{2}-\d{2}$/.test(v))return false;const d=new Date(v+"T00:00:00Z");return !Number.isNaN(d.getTime())&&d.toISOString().slice(0,10)===v;}
 function nonempty(v){if(typeof v==="boolean")return v;if(typeof v==="string")return !!v.trim();if(Array.isArray(v))return v.length>0;if(v&&typeof v==="object")return Object.keys(v).length>0;return v!==null&&v!==undefined;}
 function validateRegistry(registry){
@@ -10,8 +10,8 @@ function validateRegistry(registry){
  const seen=new Set();registry.rules.forEach((r,i)=>{const at="rules["+i+"]";if(!r||typeof r!=="object"||Array.isArray(r)){errors.push(at+" must be an object.");return;}
  if(!nonempty(r.ruleId))errors.push(at+".ruleId is required.");else{const id=String(r.ruleId).toLowerCase();if(seen.has(id))errors.push(at+".ruleId is duplicated: "+r.ruleId);seen.add(id);}
  if(!STATUSES.includes(r.status)){errors.push(at+".status is invalid.");return;}
- for(const field of ["effectiveFrom","effectiveTo","reviewedOn"])if(r[field]!=null&&r[field]!==""&&!isDate(r[field]))errors.push(at+"."+field+" must be a real YYYY-MM-DD date.");
- if(isDate(r.effectiveFrom)&&isDate(r.effectiveTo)&&r.effectiveTo<r.effectiveFrom)errors.push(at+".effectiveTo cannot be earlier than effectiveFrom.");
+ for(const field of DATE_FIELDS)if(r[field]!=null&&r[field]!==""&&!isDate(r[field]))errors.push(at+"."+field+" must be a real YYYY-MM-DD date.");
+ if(isDate(r.effectiveFrom)&&isDate(r.effectiveTo)&&r.effectiveTo<r.effectiveFrom)errors.push(at+".effectiveTo cannot be earlier than effectiveFrom.");\n if(isDate(r.sourcePublishedOn)&&isDate(r.sourceCheckedOn)&&r.sourceCheckedOn<r.sourcePublishedOn)errors.push(at+".sourceCheckedOn cannot be earlier than sourcePublishedOn.");
  if(r.sourceUrl){try{if(new URL(r.sourceUrl).protocol!=="https:")errors.push(at+".sourceUrl must use HTTPS.");}catch{errors.push(at+".sourceUrl must be a valid absolute URL.");}}
  if(r.status==="approved"){
   for(const f of REQUIRED)if(!nonempty(r[f]))errors.push(at+" is approved but "+f+" is missing.");
