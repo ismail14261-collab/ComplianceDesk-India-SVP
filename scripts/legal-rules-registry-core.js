@@ -2,7 +2,7 @@
 "use strict";
 const STATUSES=["draft","research_needed","in_review","approved","suspended","superseded"];
 const REQUIRED=["ruleId","title","regime","primaryAuthority","sourceUrl","sourceType","effectiveFrom","applicability","exceptions","triggerEvent","deadlineMethod","requiredOutput","reviewer","reviewedOn","version","testCases","sourceVerified","reviewerApproval"];
-function isDate(v){if(typeof v!=="string"||!/^\\d{4}-\\d{2}-\\d{2}$/.test(v))return false;const d=new Date(v+"T00:00:00Z");return !Number.isNaN(d.getTime())&&d.toISOString().slice(0,10)===v;}
+function isDate(v){if(typeof v!=="string"||!/^\d{4}-\d{2}-\d{2}$/.test(v))return false;const d=new Date(v+"T00:00:00Z");return !Number.isNaN(d.getTime())&&d.toISOString().slice(0,10)===v;}
 function nonempty(v){if(typeof v==="boolean")return v;if(typeof v==="string")return !!v.trim();if(Array.isArray(v))return v.length>0;if(v&&typeof v==="object")return Object.keys(v).length>0;return v!==null&&v!==undefined;}
 function validateRegistry(registry){
  const errors=[];if(!registry||typeof registry!=="object"||Array.isArray(registry))return ["Registry must be a JSON object."];
@@ -23,12 +23,12 @@ function validateRegistry(registry){
  }
  });return errors;
 }
-function splitLines(value){return String(value||"").split(/\\r?\\n/).map(s=>s.trim()).filter(Boolean);}
+function splitLines(value){return String(value||"").split(/\r?\n/).map(s=>s.trim()).filter(Boolean);}
 function toRegistryRule(ui){
  const out={...ui,applicability:{description:String(ui.applicability||"")},exceptions:splitLines(ui.exceptions),testCases:splitLines(ui.testCases).map(s=>({scenario:s})),version:String(ui.version||"1.0")};
  delete out.updatedAt;return out;
 }
 function toUiRule(r){
- return {...r,applicability:typeof r.applicability==="string"?r.applicability:(r.applicability?.description||JSON.stringify(r.applicability||{})),exceptions:Array.isArray(r.exceptions)?r.exceptions.map(x=>typeof x==="string"?x:JSON.stringify(x)).join("\\n"):String(r.exceptions||""),testCases:Array.isArray(r.testCases)?r.testCases.map(x=>typeof x==="string"?x:(x.scenario||x.name||JSON.stringify(x))).join("\\n"):String(r.testCases||""),version:String(r.version??"1.0"),sourceVerified:r.sourceVerified===true,reviewerApproval:r.reviewerApproval===true};}
+ return {...r,applicability:typeof r.applicability==="string"?r.applicability:(r.applicability?.description||JSON.stringify(r.applicability||{})),exceptions:Array.isArray(r.exceptions)?r.exceptions.map(x=>typeof x==="string"?x:JSON.stringify(x)).join("\n"):String(r.exceptions||""),testCases:Array.isArray(r.testCases)?r.testCases.map(x=>typeof x==="string"?x:(x.scenario||x.name||JSON.stringify(x))).join("\n"):String(r.testCases||""),version:String(r.version??"1.0"),sourceVerified:r.sourceVerified===true,reviewerApproval:r.reviewerApproval===true};}
 return {STATUSES,validateRegistry,toRegistryRule,toUiRule,isDate};
 });
