@@ -43,7 +43,7 @@ test("rejects an approved rule missing source, applicability, or reviewer eviden
   assert.ok(errors.some(error => error.includes("sourceUrl is missing")));
   assert.ok(errors.some(error => error.includes("applicability is missing")));
   assert.ok(errors.some(error => error.includes("reviewerApproval is missing")));
-  assert.ok(errors.some(error => error.includes("reviewerApproval must be true")));
+  assert.ok(errors.some(error => error.includes("reviewerApproval is true")));
 });
 
 test("rejects a non-HTTPS source", () => {
@@ -75,5 +75,5 @@ test("does not allow approval without explicit source verification", () => {
   const rule = validApprovedRule();
   rule.sourceVerified = false;
   const errors = validateRegistry({ schemaVersion: 1, rules: [rule] });
-  assert.ok(errors.some(error => error.includes("sourceVerified must be true")));
+  assert.ok(errors.some(error => error.includes("sourceVerified is true")));
 });
