@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#101d35">
+  <meta name="description" content="ComplianceDesk India — a workspace for Indian corporate compliance operations.">
+  <title>ComplianceDesk India | Compliance Workspace</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar" id="sidebar">
+      <a class="brand" href="#" aria-label="ComplianceDesk India home">
+        <span class="brand-mark">C<span>.</span></span>
+        <span class="brand-copy"><strong>ComplianceDesk</strong><small>INDIA · CORPORATE</small></span>
+      </a>
+      <div class="workspace-label">WORKSPACE</div>
+      <nav class="nav" aria-label="Main navigation">
+        <button class="nav-item active" data-view="overview"><span class="nav-icon">▦</span> Overview</button>
+        <button class="nav-item" data-view="entities"><span class="nav-icon">▤</span> Entities <span class="nav-count" id="entityNavCount">0</span></button>
+        <button class="nav-item" data-view="compliance"><span class="nav-icon">✓</span> Compliance tracker</button>
+        <button class="nav-item" data-view="calendar"><span class="nav-icon">▦</span> Due dates</button>
+        <button class="nav-item" data-view="documents"><span class="nav-icon">▧</span> Document centre</button>
+        <button class="nav-item" data-view="legal"><span class="nav-icon">§</span> Legal library</button>
+      </nav>
+      <div class="sidebar-bottom">
+        <div class="sidebar-note"><span class="note-dot"></span><div><strong>Legal verification</strong><p>Verify provisions before relying on a deadline.</p></div></div>
+        <button class="nav-item" data-view="settings"><span class="nav-icon">⚙</span> Settings & data</button>
+        <div class="profile"><span class="avatar">CD</span><div><strong>Compliance team</strong><small>Local workspace</small></div><span class="profile-menu">•••</span></div>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <button class="mobile-menu" id="mobileMenu" aria-label="Toggle menu">☰</button>
+        <div class="breadcrumbs">Workspace <span>/</span> <strong id="breadcrumbCurrent">Overview</strong></div>
+        <div class="top-actions">
+          <span class="today-label" id="todayLabel"></span>
+          <button class="icon-button" id="helpButton" aria-label="Help">?</button>
+          <button class="button button-primary" id="quickAddTop">＋ New task</button>
+        </div>
+      </header>
+
+      <section class="page-content">
+        <div class="welcome-row">
+          <div><div class="eyebrow">CORPORATE COMPLIANCE WORKSPACE</div><h1 id="pageTitle">Good to see you.</h1><p class="page-subtitle" id="pageSubtitle">A clear view of your entities, obligations and upcoming work.</p></div>
+          <div class="welcome-actions"><button class="button button-secondary" id="exportButton">↧ Export tasks</button><button class="button button-primary" id="quickAdd">＋ Add compliance task</button></div>
+        </div>
+
+        <div class="notice" role="note"><span class="notice-icon">i</span><div><strong>Prototype data — verify before use</strong><p>Example obligations are illustrative, not verified legal deadlines. Confirm the latest Act, Rules, notifications and applicability before taking action.</p></div><a href="https://www.mca.gov.in/" target="_blank" rel="noopener noreferrer">MCA official site ↗</a></div>
+
+        <section class="metrics" aria-label="Compliance summary">
+          <article class="metric-card"><div class="metric-top"><span>Total entities</span><span class="metric-icon blue">▤</span></div><div class="metric-value" id="metricEntities">0</div><div class="metric-foot">Companies and LLPs in workspace</div></article>
+          <article class="metric-card"><div class="metric-top"><span>Open tasks</span><span class="metric-icon violet">◷</span></div><div class="metric-value" id="metricOpen">0</div><div class="metric-foot">Items requiring follow-up</div></article>
+          <article class="metric-card"><div class="metric-top"><span>Due in 30 days</span><span class="metric-icon amber">⌁</span></div><div class="metric-value" id="metricDue">0</div><div class="metric-foot">Based on dates entered</div></article>
+          <article class="metric-card"><div class="metric-top"><span>Overdue</span><span class="metric-icon red">!</span></div><div class="metric-value" id="metricOverdue">0</div><div class="metric-foot">Open tasks past their due date</div></article>
+        </section>
+
+        <div class="content-grid">
+          <section class="panel task-panel">
+            <div class="panel-heading"><div><h2 id="taskHeading">Compliance tracker</h2><p>Track work and keep a clear audit trail.</p></div><button class="text-button" data-goto="compliance">View all →</button></div>
+            <div class="toolbar"><label class="search-box"><span>⌕</span><input id="taskSearch" type="search" placeholder="Search tasks or entities…" aria-label="Search tasks"></label><select id="statusFilter" aria-label="Filter by status"><option value="all">All statuses</option><option value="Open">Open</option><option value="In progress">In progress</option><option value="Under review">Under review</option><option value="Completed">Completed</option></select></div>
+            <div class="table-wrap"><table><thead><tr><th>COMPLIANCE ITEM</th><th>ENTITY</th><th>DUE DATE</th><th>STATUS</th><th>PRIORITY</th><th></th></tr></thead><tbody id="taskRows"></tbody></table><div class="empty-state" id="taskEmpty" hidden><span>✓</span><strong>No tasks match your view</strong><p>Add a task or change your search and filters.</p></div></div>
+            <div class="table-footer"><span id="taskCountLabel">0 tasks</span><span>Dates are user-entered and not legally validated.</span></div>
+          </section>
+          <aside class="right-column">
+            <section class="panel deadline-panel"><div class="panel-heading"><div><h2>Upcoming deadlines</h2><p>Next due dates in your tracker</p></div><span class="panel-heading-icon">◷</span></div><div id="upcomingList" class="upcoming-list"></div><button class="button button-full button-secondary" data-goto="calendar">Open due date view</button></section>
+            <section class="panel shortcuts-panel"><div class="panel-heading"><div><h2>Quick actions</h2><p>Keep your work moving</p></div></div><button class="shortcut" id="shortcutEntity"><span class="shortcut-icon teal">＋</span><span><strong>Add an entity</strong><small>Register a company or LLP</small></span><span class="shortcut-arrow">→</span></button><button class="shortcut" id="shortcutTask"><span class="shortcut-icon blue">✓</span><span><strong>Create a compliance task</strong><small>Assign an owner and due date</small></span><span class="shortcut-arrow">→</span></button><button class="shortcut" data-goto="legal"><span class="shortcut-icon amber">§</span><span><strong>Open legal sources</strong><small>Find primary legislation</small></span><span class="shortcut-arrow">→</span></button></section>
+          </aside>
+        </div>
+        <footer class="footer"><span>© <span id="yearLabel"></span> ComplianceDesk India</span><span>Built for careful compliance operations <span class="footer-dot">·</span> Legal review required</span></footer>
+      </section>
+    </main>
+  </div>
+
+  <dialog id="taskDialog" class="modal">
+    <form id="taskForm" method="dialog">
+      <div class="modal-header"><div><div class="eyebrow">WORK MANAGEMENT</div><h2>Add compliance task</h2></div><button type="button" class="close-button" data-close="taskDialog" aria-label="Close">×</button></div>
+      <div class="form-grid">
+        <label class="field field-wide">Task name <input name="title" required maxlength="140" placeholder="e.g. Prepare annual return filing checklist"></label>
+        <label class="field">Entity <select name="entity" id="taskEntitySelect"><option value="">General / unassigned</option></select></label>
+        <label class="field">Due date <input name="dueDate" type="date"></label>
+        <label class="field">Category <select name="category"><option>Companies Act / MCA</option><option>LLP Act / MCA</option><option>GST</option><option>Income tax</option><option>Labour law</option><option>Internal / other</option></select></label>
+        <label class="field">Priority <select name="priority"><option>Medium</option><option>High</option><option>Low</option></select></label>
+        <label class="field">Status <select name="status"><option>Open</option><option>In progress</option><option>Under review</option><option>Completed</option></select></label>
+        <label class="field">Legal verification <select name="verification"><option>Not verified</option><option>Needs review</option><option>Verified by reviewer</option><option>Illustrative only</option></select></label>
+        <label class="field field-wide">Legal reference / notes <textarea name="notes" rows="3" maxlength="1000" placeholder="Add section/rule, official source URL, trigger date and review notes."></textarea></label>
+      </div>
+      <div class="modal-footer"><button type="button" class="button button-secondary" data-close="taskDialog">Cancel</button><button type="submit" class="button button-primary">Save task</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="entityDialog" class="modal">
+    <form id="entityForm" method="dialog">
+      <div class="modal-header"><div><div class="eyebrow">ENTITY REGISTER</div><h2>Add company or LLP</h2></div><button type="button" class="close-button" data-close="entityDialog" aria-label="Close">×</button></div>
+      <div class="form-grid">
+        <label class="field field-wide">Legal name <input name="name" required maxlength="180" placeholder="Registered legal name"></label>
+        <label class="field">Entity type <select name="type"><option>Private Limited Company</option><option>Public Limited Company</option><option>One Person Company</option><option>Limited Liability Partnership</option><option>Section 8 Company</option><option>Other</option></select></label>
+        <label class="field">CIN / LLPIN <input name="identifier" maxlength="40" placeholder="Optional"></label>
+        <label class="field">Financial year end <input name="fyEnd" type="date"></label>
+        <label class="field">Registered state <input name="state" maxlength="60" placeholder="e.g. Gujarat"></label>
+      </div>
+      <p class="form-hint">Keep personal identity documents, DSC credentials and confidential client records out of this prototype.</p>
+      <div class="modal-footer"><button type="button" class="button button-secondary" data-close="entityDialog">Cancel</button><button type="submit" class="button button-primary">Save entity</button></div>
+    </form>
+  </dialog>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <script src="app.js"></script>
+</body>
+</html>
