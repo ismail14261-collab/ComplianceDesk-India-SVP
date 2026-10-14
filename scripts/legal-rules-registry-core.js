@@ -25,10 +25,18 @@ function validateRegistry(registry){
 }
 function splitLines(value){return String(value||"").split(/\r?\n/).map(s=>s.trim()).filter(Boolean);}
 function toRegistryRule(ui){
- const out={...ui,applicability:{description:String(ui.applicability||"")},exceptions:splitLines(ui.exceptions),testCases:splitLines(ui.testCases).map(s=>({scenario:s})),version:String(ui.version||"1.0")};
- delete out.updatedAt;return out;
+ const keepA=ui._registryApplicability!==undefined&&ui.applicability===ui._registryApplicabilityDisplay;
+ const keepE=ui._registryExceptions!==undefined&&ui.exceptions===ui._registryExceptionsDisplay;
+ const keepT=ui._registryTestCases!==undefined&&ui.testCases===ui._registryTestCasesDisplay;
+ const out={...ui,applicability:keepA?ui._registryApplicability:{description:String(ui.applicability||"")},exceptions:keepE?ui._registryExceptions:splitLines(ui.exceptions),testCases:keepT?ui._registryTestCases:splitLines(ui.testCases).map(s=>({scenario:s})),version:String(ui.version||"1.0")};
+ for(const key of ["updatedAt","_registryApplicability","_registryApplicabilityDisplay","_registryExceptions","_registryExceptionsDisplay","_registryTestCases","_registryTestCasesDisplay"])delete out[key];
+ return out;
 }
 function toUiRule(r){
- return {...r,applicability:typeof r.applicability==="string"?r.applicability:(r.applicability?.description||JSON.stringify(r.applicability||{})),exceptions:Array.isArray(r.exceptions)?r.exceptions.map(x=>typeof x==="string"?x:JSON.stringify(x)).join("\n"):String(r.exceptions||""),testCases:Array.isArray(r.testCases)?r.testCases.map(x=>typeof x==="string"?x:(x.scenario||x.name||JSON.stringify(x))).join("\n"):String(r.testCases||""),version:String(r.version??"1.0"),sourceVerified:r.sourceVerified===true,reviewerApproval:r.reviewerApproval===true};}
+ const applicability=typeof r.applicability==="string"?r.applicability:(r.applicability?.description||JSON.stringify(r.applicability||{}));
+ const exceptions=Array.isArray(r.exceptions)?r.exceptions.map(x=>typeof x==="string"?x:JSON.stringify(x)).join("\n"):String(r.exceptions||"");
+ const testCases=Array.isArray(r.testCases)?r.testCases.map(x=>typeof x==="string"?x:(x.scenario||x.name||JSON.stringify(x))).join("\n"):String(r.testCases||"");
+ return {...r,_registryApplicability:r.applicability,_registryApplicabilityDisplay:applicability,_registryExceptions:r.exceptions,_registryExceptionsDisplay:exceptions,_registryTestCases:r.testCases,_registryTestCasesDisplay:testCases,applicability,exceptions,testCases,version:String(r.version??"1.0"),sourceVerified:r.sourceVerified===true,reviewerApproval:r.reviewerApproval===true};
+}
 return {STATUSES,validateRegistry,toRegistryRule,toUiRule,isDate};
 });
